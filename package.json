@@ -1,0 +1,20 @@
+{
+  "name": "datalogger-fr",
+  "productName": "datalogger-fr",
+  "description": "My Electron application description",
+  "keywords": [],
+  "main": "./main.js",
+  "version": "1.0.0",
+  "author": "User",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "chart.js": "4.5.1",
+    "chartjs-plugin-zoom": "2.2.0",
+    "csv-stringify": "6.5.2"
+  },
+  "devDependencies": {
+    "electron": "40.6.1"
+  }
+}

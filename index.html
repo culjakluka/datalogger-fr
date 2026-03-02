@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE-edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="style.css" rel="stylesheet">
+    <title>CAN Telemetry</title>
+  </head>
+  <body>
+    <h1>CAN Telemetry</h1>
+
+    <div id="tabs">
+      <button onclick="showTab('charts')">Charts</button>
+      <button onclick="showTab('table')">Table</button>
+      <button id="exportBtn">Export CSV</button>
+    </div>
+
+    <div id="content">
+      <div id="charts" class="tab">
+        <canvas id="socChart"></canvas>
+        <canvas id="gasChart"></canvas>
+        <canvas id="powerChart"></canvas>
+      </div>
+
+      <div id="table" class="tab">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th>Timestamp (ms)</th>
+              <th>BMS State</th>
+              <th>SoC (%)</th>
+              <th>Power Limit (W)</th>
+              <th>VCU State</th>
+              <th>Gas Request (%)</th>
+              <th>Map Mode</th>
+              <th>Power Request (W)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <script src="renderer.js"></script>
+  </body>
+</html>

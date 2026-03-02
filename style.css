@@ -1,0 +1,76 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 10px;
+  background-color: white;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: black;
+  font-weight: bold;
+}
+
+/* TABS */
+#tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+  gap: 5px;
+}
+
+#tabs button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: lightblue;
+  color: black;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#tabs button:hover {
+  background-color: #357AB8;
+}
+
+#tabs button.active {
+  background-color: #2A5D91;
+}
+
+.tab {
+  display: none;
+}
+
+/*TABLE*/
+table {
+  border-collapse: collapse;
+  width: 100%;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+th, td {
+  border: 1px solid #CCC;
+  padding: 5px;
+  text-align: center;
+}
+
+thead {
+  color: white;
+  background-color: lightblue;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #F9F9F9;
+}
+
+tbody tr.error {
+  background-color: #FF6B6B;
+  color: white;
+  font-weight: bold;
+}
