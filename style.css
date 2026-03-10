@@ -13,6 +13,26 @@ h1 {
   font-weight: bold;
 }
 
+#connectionBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+#connectionBar input {
+  padding: 8px;
+  border: 1px solid #CCC;
+  border-radius: 5px;
+  min-width: 160px;
+}
+
+#connectionStatus {
+  font-weight: 600;
+}
+
 /* TABS */
 #tabs {
   display: flex;
@@ -21,7 +41,7 @@ h1 {
   gap: 5px;
 }
 
-#tabs button {
+#tabs button, #connectionBar button {
   padding: 10px 15px;
   border: none;
   border-radius: 5px;
@@ -32,12 +52,13 @@ h1 {
   transition: background-color 0.2s ease;
 }
 
-#tabs button:hover {
+#tabs button:hover, #connectionBar button:hover {
   background-color: #357AB8;
 }
 
 #tabs button.active {
   background-color: #2A5D91;
+  color: white;
 }
 
 .tab {

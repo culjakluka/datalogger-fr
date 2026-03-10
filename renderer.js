@@ -2,11 +2,18 @@ let dataBuffer = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   const tbody = document.querySelector('#dataTable tbody');
+
   //Charts
   const socCtx = document.getElementById('socChart');
   const gasCtx = document.getElementById('gasChart');
   const pwrLimitCtx = document.getElementById('powerLimitChart');
   const pwrReqCtx = document.getElementById('powerRequestChart');
+
+  const connectBtn = document.getElementById('connectBtn');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const interfaceInput = document.getElementById('canInterface');
+  const statusEl = document.getElementById('connectionStatus');
 
   const commonOptions = {
     responsive: true,
@@ -47,23 +54,76 @@ document.addEventListener('DOMContentLoaded', () => {
     options: commonOptions
   });
 
+  function trimChart(chart, maxPoints = 300) {
+    const points = chart.data.datasets[0].data;
+    if (points.length > maxPoints) {
+      points.splice(0, points.length - maxPoints);
+    }
+  }
+
+  function trimTable(maxRows = 300) {
+    while (tbody.children.length > maxRows) {
+      tbody.removeChild(tbody.firstChild);
+    }
+  }
+
+  function cleanedCSVRows() {
+    return dataBuffer.map((data) => ({
+      timestamp_ms: data.timestamp_ms,
+      bms_state: data.bms_state,
+      battery_soc_pct: data.battery_soc_pct,
+      power_limit_w: data.power_limit_w,
+      vcu_state: data.vcu_state,
+      gas_request_pct: data.gas_request_pct,
+      map_mode: data.map_mode,
+      power_request_w: data.power_request_w
+    }));
+  }
+
+  connectBtn.addEventListener('click', async () => {
+    const iface = interfaceInput.value.trim() || 'vcan0';
+    const result = await window.api.connectCAN(iface);
+
+    if(!result.connected) {
+      statusEl.textContent = result.error || result.message || 'Connection failed.';
+    }
+  });
+
+  disconnectBtn.addEventListener('click', async () => {
+    await window.api.disconnectCAN();
+  });
+
   // CSV export
   exportBtn.addEventListener('click', async () => {
-    const path = await window.electronAPI.showSaveDialog();
-    if (path) await window.electronAPI.saveCSV(path, dataBuffer);
-    alert('CSV saved');
+    const filePath = await window.api.showSaveDialog();
+    if (filePath) {
+      await window.api.saveCSV(filePath, cleanedCSVRows());
+      alert('CSV saved');
+    }
   });
 
   window.showTab = function(id) {
     document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
+
     const tab = document.getElementById(id);
     if (tab) tab.style.display = 'block';
-  }
+
+    document.querySelectorAll('#tabs button[data-tab]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.tab ===id);
+    });
+  };
+
+  document.querySelectorAll('#tabs button[data-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => showTab(btn.dataset.tab));
+  });
 
   showTab('table');
 
-  //Receiving mock CAN data
-  window.electronAPI.onCANData((data) => {
+  window.api.onCANStatus((status) => {
+    statusEl.textContent = status.error || status.message || 'Unknown status';
+  });
+
+  window.api.onCANData((data) => {
     dataBuffer.push(data);
 
     const tr = document.createElement('tr');
@@ -73,30 +133,39 @@ document.addEventListener('DOMContentLoaded', () => {
       <td>${data.timestamp_ms}</td>
       <td>${data.bms_state || ''}</td>
       <td>${data.battery_soc_pct?.toFixed(1) || ''}</td>
-      <td>${data.power_limit_w || ''}</td>
+      <td>${data.power_limit_w ?? ''}</td>
       <td>${data.vcu_state || ''}</td>
       <td>${data.gas_request_pct?.toFixed(1) || ''}</td>
       <td>${data.map_mode || ''}</td>
-      <td>${data.power_request_w || ''}</td>
+      <td>${data.power_request_w ?? ''}</td>
     `;
     tbody.appendChild(tr);
+    trimTable();
     
     const t = data.timestamp_ms;
 
     // SoC
     socChart.data.datasets[0].data.push({ x: t, y: data.battery_soc_pct });
+    trimChart(socChart);
     socChart.update('none');
 
     // Gas
     gasChart.data.datasets[0].data.push({ x: t, y: data.gas_request_pct });
+    trimChart(gasChart);
     gasChart.update('none');
 
     // 3) Power Limit
     powerLimitChart.data.datasets[0].data.push({ x: t, y: data.power_limit_w });
+    trimChart(powerLimitChart);
     powerLimitChart.update('none');
 
     // 4) Power Request
     powerRequestChart.data.datasets[0].data.push({ x: t, y: data.power_request_w });
+    trimChart(powerRequestChart);
     powerRequestChart.update('none');
+  });
+
+  window.api.onCANEvents((events) => {
+    console.log('CAN events:', events);
   });
 });

@@ -10,9 +10,17 @@
   <body>
     <h1>CAN Telemetry</h1>
 
+    <div id="connectionBar">
+      <label for="canInterface">SocketCAN interface</label>
+      <input id="canInterface" type="text" value="can0" placeholder="can0">
+      <button id="connectBtn">Connect</button>
+      <button id="disconnectBtn">Disconnect</button>
+      <span id="connectionStatus">Not connected</span>
+    </div>
+
     <div id="tabs">
-      <button onclick="showTab('charts')">Charts</button>
-      <button onclick="showTab('table')">Table</button>
+      <button data-tab="charts">Charts</button>
+      <button data-tab="table">Table</button>
       <button id="exportBtn">Export CSV</button>
     </div>
 
@@ -41,7 +49,8 @@
           <tbody></tbody>
         </table>
       </div>
-
+    </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
     <script src="renderer.js"></script>
