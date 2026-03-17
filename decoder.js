@@ -7,6 +7,11 @@ function decodeMessage(msg) {
   if(!msg || !Buffer.isBuffer(msg.data)) {
     return null;
   }
+  const ts = typeof msg.timestamp_ms === 'number'
+    ? msg.timestamp_ms
+    : Date.now() - startTime;
+
+  const data = msg.data;
 
   if(msg.id === 0x100) {
     if (msg.data.length < 5) return null;
@@ -45,4 +50,10 @@ function decodeMessage(msg) {
   return null;
 }
 
-module.exports = { decodeMessage };
+function resetDecoderState() {
+  lastBMS = { bms_state: 'IDLE', battery_soc_pct: 0, power_limit_w: 0 };
+  lastVCU = { vcu_state: 'IDLE', gas_request_pct: 0, map_mode: 'ECO', power_request_w: 0 };
+  startTime = Date.now();
+}
+
+module.exports = { decodeMessage, resetDecoderState };

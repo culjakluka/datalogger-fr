@@ -19,8 +19,15 @@
     </div>
 
     <div id="tabs">
+<<<<<<< HEAD
       <button data-tab="charts">Charts</button>
       <button data-tab="table">Table</button>
+=======
+      <button onclick="showTab('charts')">Charts</button>
+      <button onclick="showTab('table')">Table</button>
+      <button onclick="showTab('events')">Events</button>
+      <button id="importBtn">Import Memorator Log</button>
+>>>>>>> 2c4ecde (Dodan memorator import, event log i reset)
       <button id="exportBtn">Export CSV</button>
     </div>
 
@@ -49,8 +56,27 @@
           <tbody></tbody>
         </table>
       </div>
+<<<<<<< HEAD
     </div>
     
+=======
+
+      <div id="events" class="tab">
+        <table id="eventsTable">
+          <thead>
+            <tr>
+              <th>Timestamp (ms)</th>
+              <th>Source</th>
+              <th>Type</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+>>>>>>> 2c4ecde (Dodan memorator import, event log i reset)
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
     <script src="renderer.js"></script>

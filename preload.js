@@ -7,5 +7,7 @@ contextBridge.exposeInMainWorld('api', {
     showSaveDialog: () => ipcRenderer.invoke('show-save-dialog'),
     saveCSV: (filePath, data) => ipcRenderer.invoke('save-csv', filePath, data),
     onCANStatus: (callback) => ipcRenderer.on('can-status', (_event, payload) => callback(payload)),
-    onCANEvents: (callback) => ipcRenderer.on('can-events', (_event, payload) => callback(payload))
+    onCANEvents: (callback) => ipcRenderer.on('can-events', (_event, payload) => callback(payload)),
+    openLogFile: () => ipcRenderer.invoke('open-log-file'),
+    importMemoratorLog: (filePath) => ipcRenderer.invoke('import-memorator-log', filePath)
 });
