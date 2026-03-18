@@ -4,6 +4,7 @@ const { decodeMessage } = require('./decoder');
 const { updateState, resetState } = require('./mergeFrames');
 const canService = require('./canInterface');
 const { exportCSV } = require('./export');
+const { getCanInterfaces } = require('./scanCAN');
 
 let mainWindow;
 
@@ -44,6 +45,7 @@ function handleCANMessage(rawMsg) {
 
 
 app.whenReady().then(() => {
+    console.log('CAN interfaces:', getCanInterfaces());
   createWindow();
 });
 
@@ -102,6 +104,10 @@ ipcMain.handle('disconnect-can', async () => {
 ipcMain.handle('save-csv', async (_event, filePath, data) => {
   exportCSV(data, filePath);
   return { ok: true };
+});
+
+ipcMain.handle('get-can-interfaces', async () => {
+    return getCanInterfaces();
 });
 
 ipcMain.handle('show-save-dialog', async () => {
