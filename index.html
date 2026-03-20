@@ -12,7 +12,8 @@
 
     <div id="connectionBar">
       <label for="canInterface">SocketCAN interface</label>
-      <input id="canInterface" type="text" value="can0" placeholder="can0">
+      <input id="canInterface" type="text" list="canInterfaceList" value="can0" placeholder="can0">
+      <datalist id="canInterfaceList"></datalist>
       <button id="connectBtn">Connect</button>
       <button id="disconnectBtn">Disconnect</button>
       <span id="connectionStatus">Not connected</span>
