@@ -1,99 +1,14 @@
-// ---- Decoder (mirrors decoder.js logic) ----
-const BMS_STATES = ['IDLE', 'READY', 'ERROR'];
-const VCU_STATES = ['IDLE', 'READY', 'ERROR'];
-const MAP_MODES = ['ECO', 'NORMAL', 'SPORT'];
-
-function decodeRow(row) {
-  // row: { timestamp, channel, id, dlc, byte0..byte7, frame_num }
-  const id = parseInt(row.id, 16);
-  const bytes = [
-    row.byte0, row.byte1, row.byte2, row.byte3,
-    row.byte4, row.byte5, row.byte6, row.byte7
-  ].map(b => b ? parseInt(b, 16) : 0);
-
-  if (id === 0x100 && parseInt(row.dlc) >= 5) {
-    const stateRaw = bytes[0];
-    const socRaw = bytes[1] | (bytes[2] << 8);
-    const powerLimitRaw = bytes[3] | (bytes[4] << 8);
-    return {
-      source: 'BMS',
-      timestamp_ms: Math.round(parseInt(row.timestamp) / 1000), // microseconds to ms
-      bms_state: BMS_STATES[stateRaw] || `UNKNOWN_${stateRaw}`,
-      battery_soc_pct: socRaw * 0.1,
-      power_limit_w: powerLimitRaw
-    };
-  }
-  if (id === 0x200 && parseInt(row.dlc) >= 6) {
-    const stateRaw = bytes[0];
-    const gasRaw = bytes[1] | (bytes[2] << 8);
-    const mapRaw = bytes[3];
-    const powerRequestRaw = bytes[4] | (bytes[5] << 8);
-    return {
-      source: 'VCU',
-      timestamp_ms: Math.round(parseInt(row.timestamp) / 1000),
-      vcu_state: VCU_STATES[stateRaw] || `UNKNOWN_${stateRaw}`,
-      gas_request_pct: gasRaw * 0.1,
-      map_mode: MAP_MODES[mapRaw] || `UNKNOWN_${mapRaw}`,
-      power_request_w: powerRequestRaw
-    };
-  }
-  return null;
-}
-
-function parseCsvToRows(csvText) {
-  const lines = csvText.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim());
-  return lines.slice(1).map(line => {
-    const values = line.split(',');
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
-    return obj;
-  });
-}
-
-function buildMergedRows(csvText) {
-  const rawRows = parseCsvToRows(csvText);
-  const decoded = rawRows.map(decodeRow).filter(Boolean);
-
-  let latestBms = { bms_state: 'IDLE', battery_soc_pct: 0, power_limit_w: 0 };
-  let latestVcu = { vcu_state: 'IDLE', gas_request_pct: 0, map_mode: 'ECO', power_request_w: 0 };
-  const merged = [];
-
-  for (const d of decoded) {
-    if (d.source === 'BMS') {
-      latestBms = { bms_state: d.bms_state, battery_soc_pct: d.battery_soc_pct, power_limit_w: d.power_limit_w };
-    } else if (d.source === 'VCU') {
-      latestVcu = { vcu_state: d.vcu_state, gas_request_pct: d.gas_request_pct, map_mode: d.map_mode, power_request_w: d.power_request_w };
-    }
-    merged.push({
-      timestamp_ms: d.timestamp_ms,
-      bms_state: latestBms.bms_state,
-      battery_soc_pct: latestBms.battery_soc_pct,
-      power_limit_w: latestBms.power_limit_w,
-      vcu_state: latestVcu.vcu_state,
-      gas_request_pct: latestVcu.gas_request_pct,
-      map_mode: latestVcu.map_mode,
-      power_request_w: latestVcu.power_request_w,
-      error_active: latestBms.bms_state === 'ERROR' || latestVcu.vcu_state === 'ERROR'
-    });
-  }
-  return merged;
-}
-
-// ---- Main ----
 let dataBuffer = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   const tbody = document.querySelector('#dataTable tbody');
   const tbodyLog = document.querySelector('#dataTableLog tbody');
 
-  // Live CAN chart contexts
   const socCtx = document.getElementById('socChart');
   const gasCtx = document.getElementById('gasChart');
   const pwrLimitCtx = document.getElementById('powerLimitChart');
   const pwrReqCtx = document.getElementById('powerRequestChart');
 
-  // Log File chart contexts
   const socCtxLog = document.getElementById('socChartLog');
   const gasCtxLog = document.getElementById('gasChartLog');
   const pwrLimitCtxLog = document.getElementById('powerLimitChartLog');
@@ -127,9 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   showMode('live');
 
-  // ---- Tab switching (group-aware) ----
+  // ---- Tab switching ----
   function showTab(tabId, group) {
-    document.querySelectorAll(`.tab`).forEach(t => {
+    document.querySelectorAll('.tab').forEach(t => {
       if (t.id.endsWith('-' + group)) t.style.display = 'none';
     });
     document.getElementById(tabId).style.display = 'block';
@@ -175,24 +90,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Live charts
-  const socChart        = makeChart(socCtx,      'Battery SoC (%)');
-  const gasChart        = makeChart(gasCtx,      'Gas Request (%)');
+  const socChart = makeChart(socCtx, 'Battery SoC (%)');
+  const gasChart = makeChart(gasCtx, 'Gas Request (%)');
   const powerLimitChart = makeChart(pwrLimitCtx, 'Power Limit (W)');
-  const powerReqChart   = makeChart(pwrReqCtx,   'Power Request (W)');
+  const powerReqChart = makeChart(pwrReqCtx, 'Power Request (W)');
 
-  // Log charts
-  const socChartLog        = makeChart(socCtxLog,      'Battery SoC (%)');
-  const gasChartLog        = makeChart(gasCtxLog,      'Gas Request (%)');
+  const socChartLog = makeChart(socCtxLog, 'Battery SoC (%)');
+  const gasChartLog = makeChart(gasCtxLog, 'Gas Request (%)');
   const powerLimitChartLog = makeChart(pwrLimitCtxLog, 'Power Limit (W)');
-  const powerReqChartLog   = makeChart(pwrReqCtxLog,   'Power Request (W)');
+  const powerReqChartLog   = makeChart(pwrReqCtxLog, 'Power Request (W)');
 
   function trimChart(chart, maxPoints = 300) {
     const points = chart.data.datasets[0].data;
     if (points.length > maxPoints) points.splice(0, points.length - maxPoints);
   }
-  function trimTable(tbody, maxRows = 300) {
-    while (tbody.children.length > maxRows) tbody.removeChild(tbody.firstChild);
+  function trimTable(tbodyEl, maxRows = 300) {
+    while (tbodyEl.children.length > maxRows) tbodyEl.removeChild(tbodyEl.firstChild);
+  }
+
+  function makeTableRow(data) {
+    const tr = document.createElement('tr');
+    if (data.bms_state === 'ERROR' || data.vcu_state === 'ERROR') tr.classList.add('error');
+    tr.innerHTML = `
+      <td>${data.timestamp_ms}</td>
+      <td>${data.bms_state || ''}</td>
+      <td>${data.battery_soc_pct?.toFixed(1) ?? ''}</td>
+      <td>${data.power_limit_w ?? ''}</td>
+      <td>${data.vcu_state || ''}</td>
+      <td>${data.gas_request_pct?.toFixed(1) ?? ''}</td>
+      <td>${data.map_mode || ''}</td>
+      <td>${data.power_request_w ?? ''}</td>
+    `;
+    return tr;
   }
 
   // ---- Log File dropzone ----
@@ -201,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (folderPath) {
       selectedFolderPath = folderPath;
       dropzonePath.textContent = folderPath;
-      dropzoneText.textContent = 'SD card content folder selected:';
+      dropzoneText.textContent = 'Folder selected:';
       convertBtn.disabled = false;
       convertStatus.textContent = '';
     }
@@ -230,7 +159,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     convertBtn.disabled = true;
     convertStatus.textContent = 'Converting...';
 
-    // Clear log table and charts
     tbodyLog.innerHTML = '';
     [socChartLog, gasChartLog, powerLimitChartLog, powerReqChartLog].forEach(c => {
       c.data.datasets[0].data = [];
@@ -244,24 +172,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const rows = buildMergedRows(result.content);
-    rows.forEach(data => {
-      // Table row
-      const tr = document.createElement('tr');
-      if (data.error_active) tr.classList.add('error');
-      tr.innerHTML = `
-        <td>${data.timestamp_ms}</td>
-        <td>${data.bms_state || ''}</td>
-        <td>${data.battery_soc_pct?.toFixed(1) ?? ''}</td>
-        <td>${data.power_limit_w ?? ''}</td>
-        <td>${data.vcu_state || ''}</td>
-        <td>${data.gas_request_pct?.toFixed(1) ?? ''}</td>
-        <td>${data.map_mode || ''}</td>
-        <td>${data.power_request_w ?? ''}</td>
-      `;
-      tbodyLog.appendChild(tr);
-
-      // Charts
+    result.rows.forEach(data => {
+      tbodyLog.appendChild(makeTableRow(data));
       const t = data.timestamp_ms;
       socChartLog.data.datasets[0].data.push({ x: t, y: data.battery_soc_pct });
       gasChartLog.data.datasets[0].data.push({ x: t, y: data.gas_request_pct });
@@ -270,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     [socChartLog, gasChartLog, powerLimitChartLog, powerReqChartLog].forEach(c => c.update('none'));
-    convertStatus.textContent = `Done! ${rows.length} rows loaded.`;
+    convertStatus.textContent = `Done! ${result.rows.length} rows loaded.`;
     convertBtn.disabled = false;
     showTab('table-log', 'log');
   });
@@ -310,19 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   window.api.onCANData((data) => {
     dataBuffer.push(data);
-    const tr = document.createElement('tr');
-    if (data.bms_state === 'ERROR' || data.vcu_state === 'ERROR') tr.classList.add('error');
-    tr.innerHTML = `
-      <td>${data.timestamp_ms}</td>
-      <td>${data.bms_state || ''}</td>
-      <td>${data.battery_soc_pct?.toFixed(1) || ''}</td>
-      <td>${data.power_limit_w ?? ''}</td>
-      <td>${data.vcu_state || ''}</td>
-      <td>${data.gas_request_pct?.toFixed(1) || ''}</td>
-      <td>${data.map_mode || ''}</td>
-      <td>${data.power_request_w ?? ''}</td>
-    `;
-    tbody.appendChild(tr);
+    tbody.appendChild(makeTableRow(data));
     trimTable(tbody);
 
     const t = data.timestamp_ms;
