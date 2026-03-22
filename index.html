@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE-edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="style.css" rel="stylesheet">
-  <title>CAN Telemetry</title>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE-edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="style.css" rel="stylesheet">
+<title>CAN Telemetry</title>
 </head>
 <body>
 <h1>CAN Telemetry</h1>
@@ -25,19 +25,19 @@
     <button id="disconnectBtn">Disconnect</button>
     <span id="connectionStatus">Not connected</span>
   </div>
-  <div id="tabs">
-    <button data-tab="charts">Charts</button>
-    <button data-tab="table">Table</button>
+  <div id="tabs-live" class="tabs">
+    <button data-tab="charts-live" data-group="live">Charts</button>
+    <button data-tab="table-live" data-group="live">Table</button>
     <button id="exportBtn">Export CSV</button>
   </div>
-  <div id="content">
-    <div id="charts" class="tab">
+  <div>
+    <div id="charts-live" class="tab">
       <canvas id="socChart"></canvas>
       <canvas id="gasChart"></canvas>
       <canvas id="powerLimitChart"></canvas>
       <canvas id="powerRequestChart"></canvas>
     </div>
-    <div id="table" class="tab">
+    <div id="table-live" class="tab">
       <table id="dataTable">
         <thead>
           <tr>
@@ -67,7 +67,35 @@
     <button id="convertBtn">Convert to CSV</button>
     <span id="convertStatus"></span>
   </div>
-  <textarea id="csvOutput" readonly placeholder="Converted CSV output will appear here..."></textarea>
+  <div id="tabs-log" class="tabs">
+    <button data-tab="charts-log" data-group="log">Charts</button>
+    <button data-tab="table-log" data-group="log">Table</button>
+  </div>
+  <div>
+    <div id="charts-log" class="tab">
+      <canvas id="socChartLog"></canvas>
+      <canvas id="gasChartLog"></canvas>
+      <canvas id="powerLimitChartLog"></canvas>
+      <canvas id="powerRequestChartLog"></canvas>
+    </div>
+    <div id="table-log" class="tab">
+      <table id="dataTableLog">
+        <thead>
+          <tr>
+            <th>Timestamp (ms)</th>
+            <th>BMS State</th>
+            <th>SoC (%)</th>
+            <th>Power Limit (W)</th>
+            <th>VCU State</th>
+            <th>Gas Request (%)</th>
+            <th>Map Mode</th>
+            <th>Power Request (W)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

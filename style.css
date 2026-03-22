@@ -65,13 +65,13 @@ h1 {
 }
 
 /* TABS */
-#tabs {
+.tabs {
   display: flex;
   justify-content: center;
   margin-bottom: 15px;
   gap: 5px;
 }
-#tabs button, #connectionBar button {
+.tabs button, #connectionBar button {
   padding: 10px 15px;
   border: none;
   border-radius: 5px;
@@ -81,10 +81,10 @@ h1 {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
-#tabs button:hover, #connectionBar button:hover {
+.tabs button:hover, #connectionBar button:hover {
   background-color: #357AB8;
 }
-#tabs button.active {
+.tabs button.active {
   background-color: #2A5D91;
   color: white;
 }
@@ -176,18 +176,4 @@ tbody tr.error {
 #convertStatus {
   font-weight: 600;
   font-size: 13px;
-}
-#csvOutput {
-  width: 100%;
-  height: 400px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 12px;
-  border: 1px solid #CCC;
-  border-radius: 6px;
-  padding: 10px;
-  box-sizing: border-box;
-  resize: vertical;
-  background-color: #FAFAFA;
-  color: #222;
-  white-space: pre;
 }
