@@ -1,4 +1,3 @@
-
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
     connectCAN: (iface) => ipcRenderer.invoke('connect-can', iface),
@@ -8,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
     showSaveDialog: () => ipcRenderer.invoke('show-save-dialog'),
     saveCSV: (filePath, data) => ipcRenderer.invoke('save-csv', filePath, data),
     onCANStatus: (callback) => ipcRenderer.on('can-status', (_event, payload) => callback(payload)),
-    onCANEvents: (callback) => ipcRenderer.on('can-events', (_event, payload) => callback(payload))
+    onCANEvents: (callback) => ipcRenderer.on('can-events', (_event, payload) => callback(payload)),
+    openFolderDialog: () => ipcRenderer.invoke('open-folder-dialog'),
+    kmfToCsv: (folderPath) => ipcRenderer.invoke('kmf-to-csv', folderPath),
 });
- 

@@ -1,59 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE-edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="style.css" rel="stylesheet">
-    <title>CAN Telemetry</title>
-  </head>
-  <body>
-    <h1>CAN Telemetry</h1>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE-edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="style.css" rel="stylesheet">
+  <title>CAN Telemetry</title>
+</head>
+<body>
+<h1>CAN Telemetry</h1>
 
-    <div id="connectionBar">
-      <label for="canInterface">SocketCAN interface</label>
-      <input id="canInterface" type="text" list="canInterfaceList" value="can0" placeholder="can0">
-      <datalist id="canInterfaceList"></datalist>
-      <button id="connectBtn">Connect</button>
-      <button id="disconnectBtn">Disconnect</button>
-      <span id="connectionStatus">Not connected</span>
+<div id="modeBar">
+  <button class="mode-btn" data-mode="live">LIVE CAN</button>
+  <button class="mode-btn" data-mode="logfile">LOG FILE</button>
+</div>
+
+<!-- LIVE CAN MODE -->
+<div id="mode-live" class="mode">
+  <div id="connectionBar">
+    <label for="canInterface">SocketCAN interface</label>
+    <input id="canInterface" type="text" list="canInterfaceList" value="can0" placeholder="can0">
+    <datalist id="canInterfaceList"></datalist>
+    <button id="connectBtn">Connect</button>
+    <button id="disconnectBtn">Disconnect</button>
+    <span id="connectionStatus">Not connected</span>
+  </div>
+  <div id="tabs">
+    <button data-tab="charts">Charts</button>
+    <button data-tab="table">Table</button>
+    <button id="exportBtn">Export CSV</button>
+  </div>
+  <div id="content">
+    <div id="charts" class="tab">
+      <canvas id="socChart"></canvas>
+      <canvas id="gasChart"></canvas>
+      <canvas id="powerLimitChart"></canvas>
+      <canvas id="powerRequestChart"></canvas>
     </div>
-
-    <div id="tabs">
-      <button data-tab="charts">Charts</button>
-      <button data-tab="table">Table</button>
-      <button id="exportBtn">Export CSV</button>
+    <div id="table" class="tab">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Timestamp (ms)</th>
+            <th>BMS State</th>
+            <th>SoC (%)</th>
+            <th>Power Limit (W)</th>
+            <th>VCU State</th>
+            <th>Gas Request (%)</th>
+            <th>Map Mode</th>
+            <th>Power Request (W)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
+  </div>
+</div>
 
-    <div id="content">
-      <div id="charts" class="tab">
-        <canvas id="socChart"></canvas>
-        <canvas id="gasChart"></canvas>
-        <canvas id="powerLimitChart"></canvas>
-        <canvas id="powerRequestChart"></canvas>
-      </div>
+<!-- LOG FILE MODE -->
+<div id="mode-logfile" class="mode">
+  <div id="dropzone">
+    <p id="dropzone-text">Drag a folder here or click to select</p>
+    <p id="dropzone-path"></p>
+  </div>
+  <div id="loadfile-controls">
+    <button id="convertBtn">Convert to CSV</button>
+    <span id="convertStatus"></span>
+  </div>
+  <textarea id="csvOutput" readonly placeholder="Converted CSV output will appear here..."></textarea>
+</div>
 
-      <div id="table" class="tab">
-        <table id="dataTable">
-          <thead>
-            <tr>
-              <th>Timestamp (ms)</th>
-              <th>BMS State</th>
-              <th>SoC (%)</th>
-              <th>Power Limit (W)</th>
-              <th>VCU State</th>
-              <th>Gas Request (%)</th>
-              <th>Map Mode</th>
-              <th>Power Request (W)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
-    <script src="renderer.js"></script>
-  </body>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+<script src="renderer.js"></script>
+</body>
 </html>

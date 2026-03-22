@@ -5,3 +5,5 @@ build/
 *.log
 .DS_Store
 Thumbs.db
+python/.venv
+python/output.csv

@@ -1,7 +1,6 @@
 let dataBuffer = [];
 document.addEventListener('DOMContentLoaded', async () => {
   const tbody = document.querySelector('#dataTable tbody');
-  //Charts
   const socCtx = document.getElementById('socChart');
   const gasCtx = document.getElementById('gasChart');
   const pwrLimitCtx = document.getElementById('powerLimitChart');
@@ -13,24 +12,116 @@ document.addEventListener('DOMContentLoaded', async () => {
   const interfaceList = document.getElementById('canInterfaceList');
   const statusEl = document.getElementById('connectionStatus');
 
-  // Populate datalist with available CAN interfaces
+  // Log File tab elements
+  const dropzone = document.getElementById('dropzone');
+  const dropzoneText = document.getElementById('dropzone-text');
+  const dropzonePath = document.getElementById('dropzone-path');
+  const convertBtn = document.getElementById('convertBtn');
+  const convertStatus = document.getElementById('convertStatus');
+  const csvOutput = document.getElementById('csvOutput');
+
+  let selectedFolderPath = null;
+
+  // ---- Mode switching ----
+  function showMode(id) {
+    document.querySelectorAll('.mode').forEach(m => m.style.display = 'none');
+    document.getElementById('mode-' + id).style.display = 'block';
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === id);
+    });
+  }
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => showMode(btn.dataset.mode));
+  });
+  showMode('live'); // default
+
+  // ---- CAN interfaces ----
   const ifaces = await window.api.getCanInterfaces();
   ifaces.forEach((iface) => {
     const option = document.createElement('option');
     option.value = iface;
     interfaceList.appendChild(option);
   });
-  // Auto-select first interface if available
   if (ifaces.length > 0) {
     interfaceInput.value = ifaces[0];
   }
 
+  // ---- Log File tab ----
+  dropzone.addEventListener('click', async () => {
+    const folderPath = await window.api.openFolderDialog();
+    if (folderPath) {
+      selectedFolderPath = folderPath;
+      dropzonePath.textContent = folderPath;
+      dropzoneText.textContent = 'Folder selected:';
+      convertBtn.disabled = false;
+      convertStatus.textContent = '';
+      csvOutput.value = '';
+    }
+  });
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  });
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove('dragover');
+  });
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    const items = e.dataTransfer.files;
+    if (items.length > 0) {
+      const folderPath = items[0].path;
+      selectedFolderPath = folderPath;
+      dropzonePath.textContent = folderPath;
+      dropzoneText.textContent = 'Folder selected:';
+      convertBtn.disabled = false;
+      convertStatus.textContent = '';
+      csvOutput.value = '';
+    }
+  });
+
+  convertBtn.disabled = true;
+  convertBtn.addEventListener('click', async () => {
+    if (!selectedFolderPath) return;
+    convertBtn.disabled = true;
+    convertStatus.textContent = 'Converting...';
+    csvOutput.value = '';
+
+
+   console.log(JSON.stringify(selectedFolderPath));
+
+    const result = await window.api.kmfToCsv(selectedFolderPath);
+    if (result.ok) {
+      csvOutput.value = formatCsv(result.content);
+      convertStatus.textContent = 'Done!';
+    } else {
+      convertStatus.textContent = 'Error: ' + result.error;
+    }
+    convertBtn.disabled = false;
+  });
+
+  function formatCsv(raw) {
+    const lines = raw.trim().split('\n');
+    const rows = lines.map(l => l.split(','));
+    const colWidths = [];
+    rows.forEach(row => {
+      row.forEach((cell, i) => {
+        colWidths[i] = Math.max(colWidths[i] || 0, cell.length);
+      });
+    });
+    return rows.map(row =>
+      row.map((cell, i) => cell.padEnd(colWidths[i])).join('  ')
+    ).join('\n');
+  }
+
+  // ---- Charts ----
   const commonOptions = {
     responsive: true,
     animation: false,
     interaction: { mode: 'nearest', intersect: false },
     scales: {
-     x: { type: 'linear', title: { display: true, text: 'Time (ms)' } }
+      x: { type: 'linear', title: { display: true, text: 'Time (ms)' } }
     },
     plugins: {
       zoom: {
@@ -59,6 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     data: { datasets: [{ label: 'Power Request (W)', data: [], borderWidth: 2, tension: 0.1 }] },
     options: commonOptions
   });
+
   function trimChart(chart, maxPoints = 300) {
     const points = chart.data.datasets[0].data;
     if (points.length > maxPoints) {
@@ -82,6 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       power_request_w: data.power_request_w
     }));
   }
+
   connectBtn.addEventListener('click', async () => {
     const iface = interfaceInput.value.trim() || 'vcan0';
     const result = await window.api.connectCAN(iface);
@@ -92,7 +185,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   disconnectBtn.addEventListener('click', async () => {
     await window.api.disconnectCAN();
   });
-  // CSV export
   exportBtn.addEventListener('click', async () => {
     const filePath = await window.api.showSaveDialog();
     if (filePath) {
@@ -100,18 +192,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       alert('CSV saved');
     }
   });
+
   window.showTab = function(id) {
     document.querySelectorAll('.tab').forEach(t => t.style.display = 'none');
     const tab = document.getElementById(id);
     if (tab) tab.style.display = 'block';
     document.querySelectorAll('#tabs button[data-tab]').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.tab ===id);
+      btn.classList.toggle('active', btn.dataset.tab === id);
     });
   };
   document.querySelectorAll('#tabs button[data-tab]').forEach((btn) => {
     btn.addEventListener('click', () => showTab(btn.dataset.tab));
   });
   showTab('table');
+
   window.api.onCANStatus((status) => {
     statusEl.textContent = status.error || status.message || 'Unknown status';
   });
@@ -131,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
     tbody.appendChild(tr);
     trimTable();
-    
+
     const t = data.timestamp_ms;
     socChart.data.datasets[0].data.push({ x: t, y: data.battery_soc_pct });
     trimChart(socChart);
