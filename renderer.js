@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (folderPath) {
       selectedFolderPath = folderPath;
       dropzonePath.textContent = folderPath;
-      dropzoneText.textContent = 'Folder selected:';
+      dropzoneText.textContent = 'SD card content folder selected:';
       convertBtn.disabled = false;
       convertStatus.textContent = '';
     }
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (items.length > 0) {
       selectedFolderPath = items[0].path;
       dropzonePath.textContent = selectedFolderPath;
-      dropzoneText.textContent = 'Folder selected:';
+      dropzoneText.textContent = 'SD card content folder selected:';
       convertBtn.disabled = false;
       convertStatus.textContent = '';
     }
